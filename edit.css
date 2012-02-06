@@ -1,0 +1,85 @@
+html, body {
+    height: 100%;
+    background: #F0F4F8;
+    font-family: "Helvetica Neue",helvetica,arial,sans-serif;
+    line-height: 1.4;
+}
+
+.cleancol > h1 {
+    font-size: 150%;
+    text-align: center;
+}
+
+#message {
+    display: none;
+}
+
+#container {
+    height: 90%;
+    margin: 2em 1em 0 1em;
+}
+
+.inputs {
+    white-space: pre;
+    font: 90% "Andale Mono", "Lucida Console", "Bitstream Vera Sans Mono", "Courier New", monospace;
+    border: none;
+    box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+#editor textarea {
+    height: 85%;
+    width: 100%;
+    border-radius: .5em .5em 0 0;
+}
+
+#editor input {
+    width: 100%;
+    border-radius: 0 0 .5em .5em;
+}
+
+.cleancol {
+    height: 90%;
+    background: #DCE7F1;
+    padding: 1em;
+    margin: 1em;
+    border-radius: .5em;
+    border-top: thin solid #ACA7FF;
+    border-left: thin solid #ACA7FF;
+    box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.5);
+    overflow-y: scroll;
+}
+
+#recents {
+    float: right;
+    width: 20%;
+}
+
+#editor {
+    float: right;
+    width: 45%;
+}
+
+#info {
+    float: right;
+    width: 20%;
+}
+
+#tags {
+    -moz-column-count: 2;
+    -webkit-column-count: 2;
+    column-count: 2;
+    column-gap: 1em;
+    -moz-column-gap: 1em;
+    -webkit-column-gap: 1em;
+}
+
+.taglink {
+    cursor: pointer;
+    display: block;
+}
+
+a {
+    color: #BC4378;
+    text-decoration: none;
+}
+
