@@ -20,7 +20,7 @@ html, body {
 }
 
 .inputs {
-    white-space: pre;
+    white-space: pre-wrap;
     font: 90% "Andale Mono", "Lucida Console", "Bitstream Vera Sans Mono", "Courier New", monospace;
     border: none;
     box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.5);
@@ -47,11 +47,17 @@ html, body {
     border-left: thin solid #ACA7FF;
     box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.5);
     overflow-y: scroll;
+    overflow-x: hide;
 }
 
 #recents {
     float: right;
     width: 20%;
+}
+
+#recents span {
+    cursor: pointer;
+    padding-right: 1em;
 }
 
 #editor {
@@ -60,11 +66,21 @@ html, body {
 }
 
 #info {
+    position: relative;
     float: right;
     width: 20%;
 }
 
+#info button {
+    width: 100%;
+}
+
 #tags {
+    position: absolute;
+    bottom: 0;
+    max-height: 15em;
+    overflow: scroll;
+    width: 90%;
     -moz-column-count: 2;
     -webkit-column-count: 2;
     column-count: 2;
