@@ -5,6 +5,7 @@ Set.prototype.remove = function(o) { delete this[o]; }
 
 var recentTags = new Set()
     , currentFields = {}
+    , currentBag
     , host
     , space;
 
@@ -15,6 +16,34 @@ $('#revert').bind('click', function() {
 $('#save').bind('click', function() {
     saveEdit();
 });
+
+$('#delete').bind('click', function() {
+    $('input[name=tags]').val('');
+    $('textarea[name=text]').val('');
+    $('#editor > h1').text('');
+    deleteTiddler();
+});
+
+function deleteTiddler() {
+    var title = window.location.hash.replace(/^#/, '');
+    if (title) {
+        window.location.hash = '';
+        var uri = host + '/bags/'
+            + encodeURIComponent(currentBag)
+            + '/tiddlers/'
+            + encodeURIComponent(title);
+        $.ajax({
+            url: uri,
+            type: 'DELETE',
+            success: function() {
+                changes()
+            }
+        });
+    } else {
+        $('#message').text('Nothing to delete.')
+        $('#message').fadeIn();
+    }
+}
 
 function guestPage() {
     $('button').attr('disabled', 'disabled');
@@ -55,32 +84,34 @@ function saveEdit() {
 
 function updateTags(tags) {
     $('#tags').empty();
-    $.each(tags, function(tag, value) {
-        if (typeof value === 'boolean') {
-            var taglink = $('<a>')
-                .text(tag)
-                .addClass('taglink')
-                .bind('click', function() {
-                    var text = $(this).text();
-                    if (/ /.test(text)) {
-                        text = '[[' + text + ']]';
-                    }
-                    $('#editor input').val(function(index, value) {
-                        return value + ' ' + text;
-                    });
+    tags = Object.keys(tags);
+    tags = tags.sort();
+    $.each(tags, function(index, tag) {
+        var taglink = $('<a>')
+            .text(tag)
+            .addClass('taglink')
+            .bind('click', function() {
+                var text = $(this).text();
+                if (/ /.test(text)) {
+                    text = '[[' + text + ']]';
+                }
+                $('#editor input').val(function(index, value) {
+                    return value + ' ' + text;
                 });
-            $('#tags').append(taglink);
-        }
+            });
+        $('#tags').append(taglink);
     });
 }
 
 function startEdit(tiddlerTitle) {
+    $('#message').fadeOut('slow');
     window.location.hash = tiddlerTitle;
     $('#editor > h1').text(tiddlerTitle);
     $.ajax({
         dataType: 'json',
         url: host + '/' + encodeURIComponent(tiddlerTitle),
         success: function(tiddler) {
+            currentBag = tiddler.bag;
             $('textarea[name=text]').val(tiddler.text);
             var tagList = [];
             currentFields = tiddler.fields;
@@ -108,8 +139,9 @@ function changes() {
     $('#recents > ul').empty();
     $.ajax({
         dataType: 'json',
-        url: host + '/search?q=bag:' + space + '_public%20OR%20bag:'
-            + space + '_private',
+        url: host + '/search?q=bag:' + encodeURIComponent(space)
+            + '_public%20OR%20bag:' + encodeURIComponent(space)
+            + '_private',
         success: function(tiddlers) {
             $.each(tiddlers, function(index, tiddler) {
                 $.each(tiddler.tags, function(index, tag) {
@@ -119,8 +151,11 @@ function changes() {
                     .bind('click', function() {
                         startEdit($(this).parent().attr('data-tiddler-title'));
                     });
+                var tiddlerLink = $('<a>').attr('href'
+                    , '/' + encodeURIComponent(tiddler.title))
+                    .text(tiddler.title)
                 var list = $('<li>').attr('data-tiddler-title',
-                    tiddler.title).text(tiddler.title).prepend(penSpan);
+                    tiddler.title).append(tiddlerLink).prepend(penSpan);
                 $('#recents > ul').append(list);
             });
             updateTags(recentTags);

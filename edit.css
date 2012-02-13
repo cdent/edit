@@ -6,6 +6,14 @@ html, body {
     line-height: 1.4;
 }
 
+button {
+    cursor: pointer;
+}
+
+#delete {
+    margin-top: 1em;
+}
+
 .cleancol > h1 {
     font-size: 150%;
     text-align: center;
