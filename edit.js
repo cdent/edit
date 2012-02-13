@@ -143,6 +143,7 @@ function changes() {
     $('#recents > ul').empty();
     $.ajax({
         dataType: 'json',
+        headers: {'Cache-Control': 'max-age=0'},
         url: host + 'search?q=bag:' + encodeURIComponent(space)
             + '_public%20OR%20bag:' + encodeURIComponent(space)
             + '_private',
