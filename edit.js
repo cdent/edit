@@ -16,6 +16,17 @@ $('#save').bind('click', function() {
     saveEdit();
 });
 
+function guestPage() {
+    $('button').attr('disabled', 'disabled');
+    $('#message').text('You are not a member of this space, so cannot edit. ');
+    var link = $('<a>')
+        .attr('href', host)
+        .text('Visit the space.');
+    $('#message').append(link);
+    $('#message').fadeIn();
+}
+
+
 function saveEdit() {
     var title = $('#editor > h1').text();
     var tagString = $('input[name=tags]').val();
@@ -97,7 +108,8 @@ function changes() {
     $('#recents > ul').empty();
     $.ajax({
         dataType: 'json',
-        url: host + '/tiddlers?select=tag:!excludeLists;sort=-modified;limit=20',
+        url: host + '/search?q=bag:' + space + '_public%20OR%20bag:'
+            + space + '_private',
         success: function(tiddlers) {
             $.each(tiddlers, function(index, tiddler) {
                 $.each(tiddler.tags, function(index, tag) {
@@ -125,12 +137,17 @@ function init() {
     });
     $.ajax({
         dataType: 'json',
+        // replace with just /status 
         url: 'http://cdent.tiddlyspace.com/status',
         success: function(data) {
             space = data.space.name;
             host = data.server_host.scheme + '://'
                 + space + '.' + data.server_host.host;
-            changes();
+            if (data.username === 'GUEST') {
+                guestPage();
+            } else {
+               changes();
+            }
         }
     });
 }
