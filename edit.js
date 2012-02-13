@@ -28,7 +28,7 @@ function deleteTiddler() {
     var title = window.location.hash.replace(/^#/, '');
     if (title) {
         window.location.hash = '';
-        var uri = host + '/bags/'
+        var uri = host + 'bags/'
             + encodeURIComponent(currentBag)
             + '/tiddlers/'
             + encodeURIComponent(title);
@@ -68,16 +68,18 @@ function saveEdit() {
     var tiddler = {};
     tiddler.text = text;
     tiddler.tags = tags;
+    tiddler.type = currentFields.type;
+    delete currentFields.type;
     tiddler.fields = currentFields;
     var jsonText = JSON.stringify(tiddler);
     $.ajax({
-        url: host + '/bags/' + encodeURIComponent(space) + '_public'
+        url: host + 'bags/' + encodeURIComponent(space) + '_public'
             + '/tiddlers/' + encodeURIComponent(title),
         type: "PUT",
         contentType: 'application/json',
         data: jsonText,
         success: function() {
-            changes();
+            checkHash();
         }
     });
 }
@@ -109,12 +111,14 @@ function startEdit(tiddlerTitle) {
     $('#editor > h1').text(tiddlerTitle);
     $.ajax({
         dataType: 'json',
-        url: host + '/' + encodeURIComponent(tiddlerTitle),
+        headers: {'Cache-Control': 'max-age=0'},
+        url: host + encodeURIComponent(tiddlerTitle),
         success: function(tiddler) {
             currentBag = tiddler.bag;
             $('textarea[name=text]').val(tiddler.text);
             var tagList = [];
             currentFields = tiddler.fields;
+            currentFields['type'] = tiddler.type
             $.each(tiddler.tags, function(index, value) {
                 if (value.match(/ /)) {
                     tagList.push('[[' + value + ']]');
@@ -139,24 +143,27 @@ function changes() {
     $('#recents > ul').empty();
     $.ajax({
         dataType: 'json',
-        url: host + '/search?q=bag:' + encodeURIComponent(space)
+        url: host + 'search?q=bag:' + encodeURIComponent(space)
             + '_public%20OR%20bag:' + encodeURIComponent(space)
             + '_private',
         success: function(tiddlers) {
             $.each(tiddlers, function(index, tiddler) {
-                $.each(tiddler.tags, function(index, tag) {
-                    recentTags.add(tag);
-                })
-                var penSpan = $('<span>').text('\u270E')
-                    .bind('click', function() {
-                        startEdit($(this).parent().attr('data-tiddler-title'));
-                    });
-                var tiddlerLink = $('<a>').attr('href'
-                    , '/' + encodeURIComponent(tiddler.title))
-                    .text(tiddler.title)
-                var list = $('<li>').attr('data-tiddler-title',
-                    tiddler.title).append(tiddlerLink).prepend(penSpan);
-                $('#recents > ul').append(list);
+                if (!tiddler.type 
+                    || tiddler.type.match(/^text/)) {
+                    $.each(tiddler.tags, function(index, tag) {
+                        recentTags.add(tag);
+                    })
+                    var penSpan = $('<span>').text('\u270E')
+                        .bind('click', function() {
+                            startEdit($(this).parent().attr('data-tiddler-title'));
+                        });
+                    var tiddlerLink = $('<a>').attr('href'
+                        , '/' + encodeURIComponent(tiddler.title))
+                        .text(tiddler.title)
+                    var list = $('<li>').attr('data-tiddler-title',
+                        tiddler.title).append(tiddlerLink).prepend(penSpan);
+                    $('#recents > ul').append(list);
+                }
             });
             updateTags(recentTags);
         }
@@ -173,11 +180,12 @@ function init() {
     $.ajax({
         dataType: 'json',
         // replace with just /status 
-        url: 'http://cdent.tiddlyspace.com/status',
+        url: '/status',
         success: function(data) {
             space = data.space.name;
-            host = data.server_host.scheme + '://'
-                + space + '.' + data.server_host.host;
+            host = '/';
+            //host = data.server_host.scheme + '://'
+            //    + space + '.' + data.server_host.host;
             if (data.username === 'GUEST') {
                 guestPage();
             } else {
@@ -186,6 +194,5 @@ function init() {
         }
     });
 }
-
 
 $(init);
