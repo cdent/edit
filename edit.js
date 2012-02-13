@@ -79,6 +79,7 @@ function saveEdit() {
         contentType: 'application/json',
         data: jsonText,
         success: function() {
+            changes();
             checkHash();
         }
     });
