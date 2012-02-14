@@ -18,15 +18,23 @@ $('#save').bind('click', function() {
 });
 
 $('#delete').bind('click', function() {
-    $('input[name=tags]').val('');
-    $('textarea[name=text]').val('');
-    $('#editor > h1').text('');
-    deleteTiddler();
+    var title = window.location.hash.replace(/^#/, '');
+    if (currentBag) {
+        var confirmation = confirm('Are you sure you want to delete ' + title + '?');
+        if (confirmation) {
+            $('input[name=tags]').val('');
+            $('textarea[name=text]').val('');
+            $('#editor > h1').text('');
+            deleteTiddler(title);
+        }
+    } else {
+        $('#message').text('Tiddler never saved to server.')
+        $('#message').fadeIn();
+    }
 });
 
-function deleteTiddler() {
-    var title = window.location.hash.replace(/^#/, '');
-    if (title) {
+function deleteTiddler(title) {
+    if (title && currentBag) {
         window.location.hash = '';
         var uri = host + 'bags/'
             + encodeURIComponent(currentBag)
@@ -58,31 +66,36 @@ function guestPage() {
 
 function saveEdit() {
     var title = $('#editor > h1').text();
-    var tagString = $('input[name=tags]').val();
-    var text = $('textarea[name=text]').val();
-    var tags = [];
-    var matches = tagString.match(/([^ \]\[]+)|(?:\[\[([^\]]+)\]\])/g) || [];
-    $.each(matches, function(index, value) {
-        tags.push(value.replace(/[\]\[]+/g, ''));
-    });
-    var tiddler = {};
-    tiddler.text = text;
-    tiddler.tags = tags;
-    tiddler.type = currentFields.type;
-    delete currentFields.type;
-    tiddler.fields = currentFields;
-    var jsonText = JSON.stringify(tiddler);
-    $.ajax({
-        url: host + 'bags/' + encodeURIComponent(space) + '_public'
-            + '/tiddlers/' + encodeURIComponent(title),
-        type: "PUT",
-        contentType: 'application/json',
-        data: jsonText,
-        success: function() {
-            changes();
-            checkHash();
-        }
-    });
+    if (title) {
+        var tagString = $('input[name=tags]').val();
+        var text = $('textarea[name=text]').val();
+        var tags = [];
+        var matches = tagString.match(/([^ \]\[]+)|(?:\[\[([^\]]+)\]\])/g) || [];
+        $.each(matches, function(index, value) {
+            tags.push(value.replace(/[\]\[]+/g, ''));
+        });
+        var tiddler = {};
+        tiddler.text = text;
+        tiddler.tags = tags;
+        tiddler.type = currentFields.type;
+        delete currentFields.type;
+        tiddler.fields = currentFields;
+        var jsonText = JSON.stringify(tiddler);
+        $.ajax({
+            url: host + 'bags/' + encodeURIComponent(space) + '_public'
+                + '/tiddlers/' + encodeURIComponent(title),
+            type: "PUT",
+            contentType: 'application/json',
+            data: jsonText,
+            success: function() {
+                changes();
+                checkHash();
+            }
+        });
+    } else {
+        $('#message').text('There is nothing to save');
+        $('#message').fadeIn();
+    }
 }
 
 function updateTags(tags) {
@@ -108,6 +121,7 @@ function updateTags(tags) {
 
 function startEdit(tiddlerTitle) {
     $('#message').fadeOut('slow');
+    $('button').removeAttr('disabled');
     window.location.hash = tiddlerTitle;
     $('#editor > h1').text(tiddlerTitle);
     $.ajax({
@@ -137,6 +151,10 @@ function checkHash() {
     if (hash) {
         hash = hash.replace(/^#/, '');
         startEdit(hash);
+    } else {
+        $('button').attr('disabled', 'disabled');
+        $('#message').text('Select a tiddler to edit');
+        $('#message').fadeIn();
     }
 }
 
