@@ -81,8 +81,11 @@ function saveEdit() {
         delete currentFields.type;
         tiddler.fields = currentFields;
         var jsonText = JSON.stringify(tiddler);
+        if (!currentBag) {
+            currentBag = space + '_public';
+        }
         $.ajax({
-            url: host + 'bags/' + encodeURIComponent(space) + '_public'
+            url: host + 'bags/' + encodeURIComponent(currentBag)
                 + '/tiddlers/' + encodeURIComponent(title),
             type: "PUT",
             contentType: 'application/json',
@@ -112,6 +115,7 @@ function updateTags(tags) {
                     text = '[[' + text + ']]';
                 }
                 $('#editor input').val(function(index, value) {
+                    // XXX: change to toggle with regex test
                     return value + ' ' + text;
                 });
             });

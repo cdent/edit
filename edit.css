@@ -4,6 +4,7 @@ html, body {
     background: #F0F4F8;
     font-family: "Helvetica Neue",helvetica,arial,sans-serif;
     line-height: 1.4;
+    overflow: auto;
 }
 
 button {
