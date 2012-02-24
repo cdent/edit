@@ -18,7 +18,7 @@ $('#save').bind('click', function() {
 });
 
 $('#delete').bind('click', function() {
-    var title = window.location.hash.replace(/^#/, '');
+    var title = decodeURIComponent(window.location.hash.replace(/^#/, ''));
     if (currentBag) {
         var confirmation = confirm('Are you sure you want to delete ' + title + '?');
         if (confirmation) {
@@ -177,6 +177,11 @@ function startEdit(tiddlerTitle) {
                 }
             });
             $('input[name=tags]').val(tagList.join(' '));
+        },
+        statusCode: {
+            404: function() {
+                $('[name=type]').filter('[value="default"]').prop('checked', true);
+             }
         }
     });
 }
@@ -185,7 +190,7 @@ function checkHash() {
     var hash = window.location.hash;
     if (hash) {
         hash = hash.replace(/^#/, '');
-        startEdit(hash);
+        startEdit(decodeURIComponent(hash));
     } else {
         $('button').attr('disabled', 'disabled');
         $('#message').text('Select a tiddler to edit').fadeIn();
