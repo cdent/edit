@@ -28,8 +28,7 @@ $('#delete').bind('click', function() {
             deleteTiddler(title);
         }
     } else {
-        $('#message').text('Tiddler never saved to server.')
-        $('#message').fadeIn();
+        $('#message').text('Tiddler never saved to server.').fadeIn();
     }
 });
 
@@ -48,8 +47,7 @@ function deleteTiddler(title) {
             }
         });
     } else {
-        $('#message').text('Nothing to delete.')
-        $('#message').fadeIn();
+        $('#message').text('Nothing to delete.').fadeIn();
     }
 }
 
@@ -59,8 +57,7 @@ function guestPage() {
     var link = $('<a>')
         .attr('href', host)
         .text('Visit the space.');
-    $('#message').append(link);
-    $('#message').fadeIn();
+    $('#message').append(link).fadeIn();
 }
 
 
@@ -85,6 +82,12 @@ function saveEdit() {
             currentBag = space + '_public';
         }
         $.ajax({
+            beforeSend: function(xhr) {
+                if (tiddler.fields['server.etag']) {
+                    xhr.setRequestHeader('If-Match',
+                        tiddler.fields['server.etag']);
+                }
+            },
             url: host + 'bags/' + encodeURIComponent(currentBag)
                 + '/tiddlers/' + encodeURIComponent(title),
             type: "PUT",
@@ -92,12 +95,15 @@ function saveEdit() {
             data: jsonText,
             success: function() {
                 changes();
-                checkHash();
+            },
+            statusCode: {
+                412: function() {
+                    $('#message').text('Edit Conflict').fadeIn();
+                }
             }
         });
     } else {
-        $('#message').text('There is nothing to save');
-        $('#message').fadeIn();
+        $('#message').text('There is nothing to save').fadeIn();
     }
 }
 
@@ -132,12 +138,13 @@ function startEdit(tiddlerTitle) {
         dataType: 'json',
         headers: {'Cache-Control': 'max-age=0'},
         url: host + encodeURIComponent(tiddlerTitle),
-        success: function(tiddler) {
+        success: function(tiddler, status, xhr) {
             currentBag = tiddler.bag;
             $('textarea[name=text]').val(tiddler.text);
             var tagList = [];
             currentFields = tiddler.fields;
             currentFields['type'] = tiddler.type
+            currentFields['server.etag'] = xhr.getResponseHeader('etag');
             $.each(tiddler.tags, function(index, value) {
                 if (value.match(/ /)) {
                     tagList.push('[[' + value + ']]');
@@ -157,8 +164,7 @@ function checkHash() {
         startEdit(hash);
     } else {
         $('button').attr('disabled', 'disabled');
-        $('#message').text('Select a tiddler to edit');
-        $('#message').fadeIn();
+        $('#message').text('Select a tiddler to edit').fadeIn();
     }
 }
 
@@ -201,15 +207,24 @@ function init() {
                         xhr.setRequestHeader("X-ControlView", "false");
                     }
     });
+
+    var url = '/status'
+        , genHost = false;
+    if (window.location.href.match(/^file:/)) {
+        url = 'http://cdent.tiddlyspace.com/status';
+        genHost = true;
+    }
+
     $.ajax({
         dataType: 'json',
-        // replace with just /status 
-        url: '/status',
+        url: url,
         success: function(data) {
             space = data.space.name;
             host = '/';
-            //host = data.server_host.scheme + '://'
-            //    + space + '.' + data.server_host.host;
+            if (genHost) {
+                host = data.server_host.scheme + '://'
+                    + space + '.' + data.server_host.host + '/';
+            }
             if (data.username === 'GUEST') {
                 guestPage();
             } else {
