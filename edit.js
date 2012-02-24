@@ -77,6 +77,17 @@ function saveEdit() {
         tiddler.type = currentFields.type;
         delete currentFields.type;
         tiddler.fields = currentFields;
+
+        // update content based on radio buttons
+        var matchedType = $('[name=type]:checked').val();
+        if (matchedType !== 'other') {
+            if (matchedType === 'default') {
+                delete tiddler.type;
+            } else {
+                tiddler.type = matchedType;
+            }
+        }
+
         var jsonText = JSON.stringify(tiddler);
         if (!currentBag) {
             currentBag = space + '_public';
@@ -144,6 +155,19 @@ function startEdit(tiddlerTitle) {
             var tagList = [];
             currentFields = tiddler.fields;
             currentFields['type'] = tiddler.type
+
+            // update the content type buttons
+            $('[name=type]').prop('checked', false);
+            var matchedType = $('[name=type]')
+                .filter('[value="' + tiddler.type + '"]');
+            if (matchedType.length) {
+                matchedType.prop('checked', true)
+            } else if (tiddler.type) {
+                $('[name=type]').filter('[value=other]').prop('checked', true);
+            } else {
+                $('[name=type]').filter('[value="default"]').prop('checked', true);
+            }
+
             currentFields['server.etag'] = xhr.getResponseHeader('etag');
             $.each(tiddler.tags, function(index, value) {
                 if (value.match(/ /)) {

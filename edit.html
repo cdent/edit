@@ -3,7 +3,7 @@
 <head>
     <title>edit</title>
     <link rel="stylesheet" type="text/css"
-    href="/bags/common/tiddlers/reset.css">
+    href="http://tiddlyspace.com/bags/common/tiddlers/reset.css">
     <link rel="stylesheet" type="text/css"
     href="http://tiddlyspace.com/bags/edit_extra/tiddlers/edit.css">
 </head>
@@ -20,6 +20,22 @@
                 <li><button id="revert">Revert</button></li>
                 <li><button id="delete">Delete</button></li>
             </ul>
+            <div id="type">
+                <ul>
+                    <li><label><input name="type" type="radio"
+                        value="default">Default</label></li>
+                    <li><label><input name="type" type="radio"
+                        value="text/x-markdown">Markdown</label></li>
+                    <li><label><input name="type" type="radio"
+                        value="text/css">CSS</label></li>
+                    <li><label><input name="type" type="radio"
+                        value="text/javascript">JavaScript</label></li>
+                    <li><label><input name="type" type="radio"
+                        value="text/html">HTML</label></li>
+                    <li><label><input name="type" type="radio"
+                        value="other">Other</label></li>
+                </ul>
+            </div>
             <div id="message"></div>
             <div id="tags">
             </div>
@@ -31,7 +47,9 @@
         </div>
     </div>
 </body>
-<script src="/bags/common/tiddlers/jquery.js"></script>
-<script src="http://tiddlyspace.com/bags/edit_extra/tiddlers/edit.js"></script>
+<script src="http://tiddlyspace.com/bags/common/tiddlers/jquery.js"></script>
+<script
+src="http://tiddlyspace.com/bags/edit_extra/tiddlers/edit.js"></script>
+<!--script src="edit.js"></script--!>
 <script src="/bags/common/tiddlers/backstage.js"></script>
 </html>
