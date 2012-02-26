@@ -3,11 +3,25 @@ var Set = function() {}
 Set.prototype.add = function(o) { this[o] = true; }
 Set.prototype.remove = function(o) { delete this[o]; }
 
+var adler32 = function(a){for(var b=65521,c=1,d=0,e=0,f;f=a.charCodeAt(e++);d=(d+c)%b)c=(c+f)%b;return(d<<16)|c}; // see https://gist.github.com/1200559/1c2b2093a661c4727958ff232cd12de8b8fb9db9
+
 var recentTags = new Set()
     , currentFields = {}
     , currentBag
+    , startHash = 0
     , host
     , space;
+
+$(window).bind('beforeunload', function(e) {
+    currentHash = adler32($('input[name=tags]').val()
+            + $('textarea[name=text]').val());
+    e.stopPropagation();
+    if (currentHash != startHash) {
+        e.returnValue = 'You have unsaved changes.';
+        return e.returnValue;
+    }
+
+});
 
 $('#revert').bind('click', function() {
     startEdit($('#editor > h1').text());
@@ -183,6 +197,8 @@ function startEdit(tiddlerTitle) {
                 }
             });
             $('input[name=tags]').val(tagList.join(' '));
+            startHash = adler32($('input[name=tags]').val()
+                    + $('textarea[name=text]').val());
         },
         statusCode: {
             404: function() {
