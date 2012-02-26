@@ -63,7 +63,7 @@ function setIcon(privatep) {
         img.css('cursor', 'pointer')
             .click(function() {
                 var target = privatep ? 'public' : 'private';
-                if (confirm('NOOP Switch to '
+                if (confirm('Switch to '
                         + (privatep ? 'public' : 'private') + '?')) {
                     currentBag = space + '_' + target;
                     setIcon(!privatep);
