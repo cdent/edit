@@ -56,8 +56,7 @@ function setIcon(privatep) {
     $('.privacyicon').remove();
     var img = $('<img>').attr({
         src: host + (privatep ? privateIcon : publicIcon),
-        'class': 'privacyicon'})
-        .css({float: 'right'});
+        'class': 'privacyicon'});
 
     if (!currentBag) {
         img.css('cursor', 'pointer')
@@ -93,8 +92,7 @@ function deleteTiddler(title) {
 }
 
 function guestPage() {
-    $('button').attr('disabled', 'disabled');
-    $('input').attr('disabled', 'disabled');
+    $('button, input, .inputs').attr('disabled', 'disabled');
     $('#message').text('You are not a member of this space, so cannot edit. ');
     var link = $('<a>')
         .attr('href', host)
@@ -184,8 +182,7 @@ function updateTags(tags) {
 
 function startEdit(tiddlerTitle) {
     $('#message').fadeOut('slow');
-    $('button').removeAttr('disabled');
-    $('input').removeAttr('disabled');
+    $('button, input, .inputs').removeAttr('disabled');
     window.location.hash = tiddlerTitle;
     $('#editor > h1').text(tiddlerTitle);
     $.ajax({
@@ -241,8 +238,7 @@ function checkHash() {
         hash = hash.replace(/^#/, '');
         startEdit(decodeURIComponent(hash));
     } else {
-        $('button').attr('disabled', 'disabled');
-        $('input').attr('disabled', 'disabled');
+        $('button, input, .inputs').attr('disabled', 'disabled');
         displayMessage('Select a tiddler to edit');
     }
 }

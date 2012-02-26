@@ -11,6 +11,10 @@ button {
     cursor: pointer;
 }
 
+.privacyicon {
+    float: right;
+}
+
 #delete {
     margin-top: 1em;
 }
@@ -40,7 +44,8 @@ button {
 
 #editor textarea {
     height: 85%;
-    width: 100%;
+    width: 96%;
+    padding: 2%;
     border-radius: .5em .5em 0 0;
     border-top: thin solid lightgrey;
     border-left: thin solid lightgrey;
