@@ -41,6 +41,7 @@ $('#delete').bind('click', function() {
             $('input[name=tags]').val('');
             $('textarea[name=text]').val('');
             $('#editor > h1').text('');
+            startHash = adler32('');
             deleteTiddler(title);
         }
     } else {
