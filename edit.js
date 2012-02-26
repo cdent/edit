@@ -8,9 +8,11 @@ var adler32 = function(a){for(var b=65521,c=1,d=0,e=0,f;f=a.charCodeAt(e++);d=(d
 var recentTags = new Set()
     , currentFields = {}
     , currentBag
-    , startHash = 0
+    , startHash = adler32('')
     , host
-    , space;
+    , space
+    , publicIcon = 'bags/tiddlyspace/tiddlers/publicIcon'
+    , privateIcon = 'bags/tiddlyspace/tiddlers/privateIcon';
 
 $(window).bind('beforeunload', function(e) {
     currentHash = adler32($('input[name=tags]').val()
@@ -48,6 +50,27 @@ $('#delete').bind('click', function() {
 
 function displayMessage(message) {
     $('#message').text(message).fadeIn();
+}
+
+function setIcon(privatep) {
+    $('.privacyicon').remove();
+    var img = $('<img>').attr({
+        src: host + (privatep ? privateIcon : publicIcon),
+        'class': 'privacyicon'})
+        .css({float: 'right'});
+
+    if (!currentBag) {
+        img.css('cursor', 'pointer')
+            .click(function() {
+                var target = privatep ? 'public' : 'private';
+                if (confirm('NOOP Switch to '
+                        + (privatep ? 'public' : 'private') + '?')) {
+                    currentBag = space + '_' + target;
+                    setIcon(!privatep);
+                }
+            });
+    }
+    $('#type').prepend(img);
 }
 
 function deleteTiddler(title) {
@@ -199,10 +222,14 @@ function startEdit(tiddlerTitle) {
             $('input[name=tags]').val(tagList.join(' '));
             startHash = adler32($('input[name=tags]').val()
                     + $('textarea[name=text]').val());
+            if (currentBag.match(/_(private|public)$/)) {
+                setIcon(currentBag.match(/_private$/));
+            }
         },
         statusCode: {
             404: function() {
                 $('[name=type]').filter('[value="default"]').prop('checked', true);
+                setIcon(false);
              }
         }
     });
