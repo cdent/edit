@@ -28,9 +28,13 @@ $('#delete').bind('click', function() {
             deleteTiddler(title);
         }
     } else {
-        $('#message').text('Tiddler never saved to server.').fadeIn();
+        displayMessage('Tiddler never saved to server.');
     }
 });
+
+function displayMessage(message) {
+    $('#message').text(message).fadeIn();
+}
 
 function deleteTiddler(title) {
     if (title && currentBag) {
@@ -47,12 +51,13 @@ function deleteTiddler(title) {
             }
         });
     } else {
-        $('#message').text('Nothing to delete.').fadeIn();
+        displayMessage('Nothing to delete.');
     }
 }
 
 function guestPage() {
     $('button').attr('disabled', 'disabled');
+    $('input').attr('disabled', 'disabled');
     $('#message').text('You are not a member of this space, so cannot edit. ');
     var link = $('<a>')
         .attr('href', host)
@@ -109,12 +114,12 @@ function saveEdit() {
             },
             statusCode: {
                 412: function() {
-                    $('#message').text('Edit Conflict').fadeIn();
+                         displayMessage('Edit Conflict');
                 }
             }
         });
     } else {
-        $('#message').text('There is nothing to save').fadeIn();
+        displayMessage('There is nothing to save');
     }
 }
 
@@ -143,6 +148,7 @@ function updateTags(tags) {
 function startEdit(tiddlerTitle) {
     $('#message').fadeOut('slow');
     $('button').removeAttr('disabled');
+    $('input').removeAttr('disabled');
     window.location.hash = tiddlerTitle;
     $('#editor > h1').text(tiddlerTitle);
     $.ajax({
@@ -193,7 +199,8 @@ function checkHash() {
         startEdit(decodeURIComponent(hash));
     } else {
         $('button').attr('disabled', 'disabled');
-        $('#message').text('Select a tiddler to edit').fadeIn();
+        $('input').attr('disabled', 'disabled');
+        displayMessage('Select a tiddler to edit');
     }
 }
 
