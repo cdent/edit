@@ -1,4 +1,5 @@
 
+$(function() {
 var Set = function() {}
 Set.prototype.add = function(o) { this[o] = true; }
 Set.prototype.remove = function(o) { delete this[o]; }
@@ -100,7 +101,6 @@ function guestPage() {
         .text('Visit the space.');
     $('#message').append(link).fadeIn();
 }
-
 
 function saveEdit() {
     var title = $('#editor > h1').text();
@@ -287,6 +287,7 @@ function init() {
     var url = '/status'
         , genHost = false;
     if (window.location.href.match(/^file:/)) {
+        // for dev
         url = 'http://cdent.tiddlyspace.com/status';
         genHost = true;
     }
@@ -304,10 +305,15 @@ function init() {
             if (data.username === 'GUEST') {
                 guestPage();
             } else {
-               changes();
+                $.ajax({
+                    url: host + 'spaces/' + space + '/members',
+                    success: changes,
+                    error: guestPage,
+                });
             }
         }
     });
 }
 
-$(init);
+init();
+});
