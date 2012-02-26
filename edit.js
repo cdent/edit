@@ -50,10 +50,16 @@ $('#delete').bind('click', function() {
     }
 });
 
+/*
+ * Fade in an announcement text message.
+ */
 function displayMessage(message) {
     $('#message').text(message).fadeIn();
 }
 
+/*
+ * Display an icon indicating privacy status of tiddler.
+ */
 function setIcon(privatep) {
     $('.privacyicon').remove();
     var img = $('<img>').attr({
@@ -74,6 +80,9 @@ function setIcon(privatep) {
     $('#type').prepend(img);
 }
 
+/*
+ * Send a DELETE for the tiddler named by title.
+ */
 function deleteTiddler(title) {
     if (title && currentBag) {
         window.location.hash = '';
@@ -84,15 +93,16 @@ function deleteTiddler(title) {
         $.ajax({
             url: uri,
             type: 'DELETE',
-            success: function() {
-                changes()
-            }
+            success: changes
         });
     } else {
         displayMessage('Nothing to delete.');
     }
 }
 
+/*
+ * Inform a non-member that they may not edit.
+ */
 function guestPage() {
     $('button, input, .inputs').attr('disabled', 'disabled');
     $('#message').text('You are not a member of this space, so cannot edit. ');
@@ -102,6 +112,9 @@ function guestPage() {
     $('#message').append(link).fadeIn();
 }
 
+/*
+ * Save the text and tags to the title in currentBag.
+ */
 function saveEdit() {
     var title = $('#editor > h1').text();
     if (title) {
@@ -145,9 +158,7 @@ function saveEdit() {
             type: "PUT",
             contentType: 'application/json',
             data: jsonText,
-            success: function() {
-                changes();
-            },
+            success: changes,
             statusCode: {
                 412: function() {
                          displayMessage('Edit Conflict');
@@ -159,6 +170,9 @@ function saveEdit() {
     }
 }
 
+/*
+ * Fill in the input with the current tags of the tiddler.
+ */
 function updateTags(tags) {
     $('#tags').empty();
     tags = Object.keys(tags);
@@ -181,6 +195,48 @@ function updateTags(tags) {
     });
 }
 
+/*
+ * Callback after tiddler is GET from server, filling in forms,
+ * preparing for edit.
+ */
+function establishEdit(tiddler, status, xhr) {
+    currentBag = tiddler.bag;
+    $('textarea[name=text]').val(tiddler.text);
+    var tagList = [];
+    currentFields = tiddler.fields;
+    currentFields['type'] = tiddler.type
+
+    // update the content type buttons
+    $('[name=type]').prop('checked', false);
+    var matchedType = $('[name=type]')
+        .filter('[value="' + tiddler.type + '"]');
+    if (matchedType.length) {
+        matchedType.prop('checked', true)
+    } else if (tiddler.type) {
+        $('[name=type]').filter('[value=other]').prop('checked', true);
+    } else {
+        $('[name=type]').filter('[value="default"]').prop('checked', true);
+    }
+
+    currentFields['server.etag'] = xhr.getResponseHeader('etag');
+    $.each(tiddler.tags, function(index, value) {
+        if (value.match(/ /)) {
+            tagList.push('[[' + value + ']]');
+        } else {
+            tagList.push(value);
+        }
+    });
+    $('input[name=tags]').val(tagList.join(' '));
+    startHash = adler32($('input[name=tags]').val()
+            + $('textarea[name=text]').val());
+    if (currentBag.match(/_(private|public)$/)) {
+        setIcon(currentBag.match(/_private$/));
+    }
+}
+
+/*
+ * Get the named tiddler to do an edit.
+ */
 function startEdit(tiddlerTitle) {
     $('#message').fadeOut('slow');
     $('button, input, .inputs').removeAttr('disabled');
@@ -190,49 +246,21 @@ function startEdit(tiddlerTitle) {
         dataType: 'json',
         headers: {'Cache-Control': 'max-age=0'},
         url: host + encodeURIComponent(tiddlerTitle),
-        success: function(tiddler, status, xhr) {
-            currentBag = tiddler.bag;
-            $('textarea[name=text]').val(tiddler.text);
-            var tagList = [];
-            currentFields = tiddler.fields;
-            currentFields['type'] = tiddler.type
-
-            // update the content type buttons
-            $('[name=type]').prop('checked', false);
-            var matchedType = $('[name=type]')
-                .filter('[value="' + tiddler.type + '"]');
-            if (matchedType.length) {
-                matchedType.prop('checked', true)
-            } else if (tiddler.type) {
-                $('[name=type]').filter('[value=other]').prop('checked', true);
-            } else {
-                $('[name=type]').filter('[value="default"]').prop('checked', true);
-            }
-
-            currentFields['server.etag'] = xhr.getResponseHeader('etag');
-            $.each(tiddler.tags, function(index, value) {
-                if (value.match(/ /)) {
-                    tagList.push('[[' + value + ']]');
-                } else {
-                    tagList.push(value);
-                }
-            });
-            $('input[name=tags]').val(tagList.join(' '));
-            startHash = adler32($('input[name=tags]').val()
-                    + $('textarea[name=text]').val());
-            if (currentBag.match(/_(private|public)$/)) {
-                setIcon(currentBag.match(/_private$/));
-            }
-        },
+        success: establishEdit,
         statusCode: {
             404: function() {
-                $('[name=type]').filter('[value="default"]').prop('checked', true);
+                $('[name=type]')
+                    .filter('[value="default"]')
+                    .prop('checked', true);
                 setIcon(false);
              }
         }
     });
 }
 
+/*
+ * Check the href anchor to see if we've been told what to edit.
+ */
 function checkHash() {
     var hash = window.location.hash;
     if (hash) {
@@ -244,6 +272,35 @@ function checkHash() {
     }
 }
 
+/*
+ * Display the recent changes.
+ */
+function displayChanges(tiddlers) {
+    $.each(tiddlers, function(index, tiddler) {
+        if (!tiddler.type 
+            || tiddler.type.match(/^text/)) {
+            $.each(tiddler.tags, function(index, tag) {
+                recentTags.add(tag);
+            })
+            var penSpan = $('<span>').text('\u270E')
+                .bind('click', function() {
+                    startEdit($(this).parent().attr('data-tiddler-title'));
+                });
+            var tiddlerLink = $('<a>').attr('href'
+                , '/' + encodeURIComponent(tiddler.title))
+                .text(tiddler.title)
+            var list = $('<li>').attr('data-tiddler-title',
+                tiddler.title).append(tiddlerLink).prepend(penSpan);
+            $('#recents > ul').append(list);
+        }
+    });
+    updateTags(recentTags);
+}
+
+/* 
+ * Get the 20 most recently changed tiddlers in the public and private
+ * bag of the space, callback to displayChanges.
+ */
 function changes() {
     $('#recents > ul').empty();
     $.ajax({
@@ -252,31 +309,14 @@ function changes() {
         url: host + 'search?q=bag:' + encodeURIComponent(space)
             + '_public%20OR%20bag:' + encodeURIComponent(space)
             + '_private',
-        success: function(tiddlers) {
-            $.each(tiddlers, function(index, tiddler) {
-                if (!tiddler.type 
-                    || tiddler.type.match(/^text/)) {
-                    $.each(tiddler.tags, function(index, tag) {
-                        recentTags.add(tag);
-                    })
-                    var penSpan = $('<span>').text('\u270E')
-                        .bind('click', function() {
-                            startEdit($(this).parent().attr('data-tiddler-title'));
-                        });
-                    var tiddlerLink = $('<a>').attr('href'
-                        , '/' + encodeURIComponent(tiddler.title))
-                        .text(tiddler.title)
-                    var list = $('<li>').attr('data-tiddler-title',
-                        tiddler.title).append(tiddlerLink).prepend(penSpan);
-                    $('#recents > ul').append(list);
-                }
-            });
-            updateTags(recentTags);
-        }
+        success: displayChanges
     });
     checkHash();
 }
 
+/*
+ * Start up, establishing if the current user has the power to edit.
+ */
 function init() {
     $.ajaxSetup({
         beforeSend: function(xhr) {
