@@ -286,8 +286,9 @@ function displayChanges(tiddlers) {
                 .bind('click', function() {
                     startEdit($(this).parent().attr('data-tiddler-title'));
                 });
-            var tiddlerLink = $('<a>').attr('href'
-                , '/' + encodeURIComponent(tiddler.title))
+            var tiddlerLink = $('<a>').attr({
+                    href: '/' + encodeURIComponent(tiddler.title),
+                    target: '_blank'})
                 .text(tiddler.title)
             var list = $('<li>').attr('data-tiddler-title',
                 tiddler.title).append(tiddlerLink).prepend(penSpan);
