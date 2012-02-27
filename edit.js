@@ -118,14 +118,9 @@ function guestPage() {
 function saveEdit() {
     var title = $('#editor > h1').text();
     if (title) {
-        var tagString = $('input[name=tags]').val();
-        var text = $('textarea[name=text]').val();
-        var tags = [];
-        var matches = tagString.match(/([^ \]\[]+)|(?:\[\[([^\]]+)\]\])/g) || [];
-        $.each(matches, function(index, value) {
-            tags.push(value.replace(/[\]\[]+/g, ''));
-        });
-        var tiddler = {};
+        var text = $('textarea[name=text]').val()
+            , tags = readTagView()
+            , tiddler = {};
         tiddler.text = text;
         tiddler.tags = tags;
         tiddler.type = currentFields.type;
@@ -171,7 +166,48 @@ function saveEdit() {
 }
 
 /*
- * Fill in the input with the current tags of the tiddler.
+ * Read the current tags from the input into an array.
+ */
+function readTagView() {
+    var tags = [];
+    var tagString = $('input[name=tags]').val();
+    var matches = tagString.match(/([^ \]\[]+)|(?:\[\[([^\]]+)\]\])/g) || [];
+    $.each(matches, function(index, value) {
+        tags.push(value.replace(/[\]\[]+/g, ''));
+    });
+    return tags;
+}
+
+/*
+ * Write updated tags into the tag view. If a non-false second
+ * argument is passed, it is assumed to be a tag that is being
+ * added or removed.
+ */
+function updateTagView(tags, changedTag) {
+    var outputTags = [];
+
+    if (changedTag) {
+        var tagIndex = tags.indexOf(changedTag);
+        if (tagIndex == -1) {
+            tags.push(changedTag);
+        } else {
+            tags.splice(tags.indexOf(changedTag), 1);
+        }
+    }
+
+    $.each(tags, function(index, tag) {
+        if (tag.match(/ /)) {
+            outputTags.push('[[' + tag + ']]');
+        } else {
+            outputTags.push(tag);
+        }
+    });
+        
+    $('#editor input').val(outputTags.join(' '))
+}
+
+/*
+ * Display the most recently used tags.
  */
 function updateTags(tags) {
     $('#tags').empty();
@@ -182,14 +218,7 @@ function updateTags(tags) {
             .text(tag)
             .addClass('taglink')
             .bind('click', function() {
-                var text = $(this).text();
-                if (/ /.test(text)) {
-                    text = '[[' + text + ']]';
-                }
-                $('#editor input').val(function(index, value) {
-                    // XXX: change to toggle with regex test
-                    return value + ' ' + text;
-                });
+                updateTagView(readTagView(), tag);
             });
         $('#tags').append(taglink);
     });
@@ -205,6 +234,7 @@ function establishEdit(tiddler, status, xhr) {
     var tagList = [];
     currentFields = tiddler.fields;
     currentFields['type'] = tiddler.type
+    currentTags = tiddler.tags
 
     // update the content type buttons
     $('[name=type]').prop('checked', false);
@@ -219,14 +249,7 @@ function establishEdit(tiddler, status, xhr) {
     }
 
     currentFields['server.etag'] = xhr.getResponseHeader('etag');
-    $.each(tiddler.tags, function(index, value) {
-        if (value.match(/ /)) {
-            tagList.push('[[' + value + ']]');
-        } else {
-            tagList.push(value);
-        }
-    });
-    $('input[name=tags]').val(tagList.join(' '));
+    updateTagView(currentTags, null);
     startHash = adler32($('input[name=tags]').val()
             + $('textarea[name=text]').val());
     if (currentBag.match(/_(private|public)$/)) {
