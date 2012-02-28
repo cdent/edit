@@ -1,4 +1,8 @@
 $(document).ready(function() {
+    // leave if there's no tiddler to work with
+    var wholething = $('#text-html.section');
+    if (wholething.length == 0) return;
+
     var place = $("#container").length > 0 ? $("#container")[0] : document.body;
     var space = window.location.host.split(".")[0]
     var title = $("#title").text();
