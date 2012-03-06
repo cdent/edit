@@ -230,7 +230,7 @@ function updateContentType(tiddlerType) {
         .filter('[value="' + tiddlerType + '"]');
     if (matchedType.length) {
         matchedType.prop('checked', true)
-    } else if (tiddler.type) {
+    } else if (tiddlerType) {
         $('[name=type]').filter('[value=other]').prop('checked', true);
     } else {
         $('[name=type]').filter('[value="default"]').prop('checked', true);
