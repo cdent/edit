@@ -168,9 +168,9 @@ function saveEdit() {
 /*
  * Read the current tags from the input into an array.
  */
-function readTagView() {
+function readTagView(tagString) {
     var tags = [];
-    var tagString = $('input[name=tags]').val();
+    tagString = tagString || $('input[name=tags]').val();
     var matches = tagString.match(/([^ \]\[]+)|(?:\[\[([^\]]+)\]\])/g) || [];
     $.each(matches, function(index, value) {
         tags.push(value.replace(/[\]\[]+/g, ''));
@@ -224,6 +224,19 @@ function updateTags(tags) {
     });
 }
 
+function updateContentType(tiddlerType) {
+    $('[name=type]').prop('checked', false);
+    var matchedType = $('[name=type]')
+        .filter('[value="' + tiddlerType + '"]');
+    if (matchedType.length) {
+        matchedType.prop('checked', true)
+    } else if (tiddler.type) {
+        $('[name=type]').filter('[value=other]').prop('checked', true);
+    } else {
+        $('[name=type]').filter('[value="default"]').prop('checked', true);
+    }
+}
+
 /*
  * Callback after tiddler is GET from server, filling in forms,
  * preparing for edit.
@@ -234,22 +247,12 @@ function establishEdit(tiddler, status, xhr) {
     var tagList = [];
     currentFields = tiddler.fields;
     currentFields['type'] = tiddler.type
-    currentTags = tiddler.tags
 
     // update the content type buttons
-    $('[name=type]').prop('checked', false);
-    var matchedType = $('[name=type]')
-        .filter('[value="' + tiddler.type + '"]');
-    if (matchedType.length) {
-        matchedType.prop('checked', true)
-    } else if (tiddler.type) {
-        $('[name=type]').filter('[value=other]').prop('checked', true);
-    } else {
-        $('[name=type]').filter('[value="default"]').prop('checked', true);
-    }
+    updateContentType(tiddler.type);
 
     currentFields['server.etag'] = xhr.getResponseHeader('etag');
-    updateTagView(currentTags, null);
+    updateTagView(tiddler.tags, null);
     startHash = adler32($('input[name=tags]').val()
             + $('textarea[name=text]').val());
     if (currentBag.match(/_(private|public)$/)) {
@@ -260,7 +263,7 @@ function establishEdit(tiddler, status, xhr) {
 /*
  * Get the named tiddler to do an edit.
  */
-function startEdit(tiddlerTitle) {
+function startEdit(tiddlerTitle, freshTags, freshType) {
     $('#message').fadeOut('slow');
     $('button, input, .inputs').removeAttr('disabled');
     window.location.hash = tiddlerTitle;
@@ -276,9 +279,16 @@ function startEdit(tiddlerTitle) {
                     .filter('[value="default"]')
                     .prop('checked', true);
                 setIcon(false);
+                updateContentType(freshType);
+                updateTagView(readTagView(freshTags), null);
              }
         }
     });
+}
+
+function emptyEdit() {
+    $('button, input, .inputs').attr('disabled', 'disabled');
+    displayMessage('Select a tiddler to edit');
 }
 
 /*
@@ -288,10 +298,17 @@ function checkHash() {
     var hash = window.location.hash;
     if (hash) {
         hash = hash.replace(/^#/, '');
-        startEdit(decodeURIComponent(hash));
+        var title, tagString, type, args;
+        args = hash.split('/', 3);
+        $.each(args, function(index, arg) {
+            args[index] = decodeURIComponent(arg);
+        });
+        title = args[0] || emptyEdit();
+        tagString = args[1] || '';
+        type = args[2] || '';
+        startEdit(title, tagString, type);
     } else {
-        $('button, input, .inputs').attr('disabled', 'disabled');
-        displayMessage('Select a tiddler to edit');
+        emptyEdit();
     }
 }
 
