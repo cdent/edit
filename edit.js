@@ -295,9 +295,8 @@ function emptyEdit() {
  * Check the href anchor to see if we've been told what to edit.
  */
 function checkHash() {
-    var hash = window.location.hash;
+    var hash = window.location.href.split('#')[1] || '';
     if (hash) {
-        hash = hash.replace(/^#/, '');
         var title, tagString, type, args;
         args = hash.split('/', 3);
         $.each(args, function(index, arg) {
