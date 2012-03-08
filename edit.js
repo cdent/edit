@@ -34,6 +34,15 @@ $('#save').bind('click', function() {
     saveEdit();
 });
 
+$('#saver').bind('click', function() {
+    saveEdit(function() {
+        var title = encodeURIComponent($('#editor > h1').text());
+        startHash = adler32($('input[name=tags]').val()
+                + $('textarea[name=text]').val());
+        window.location.href = '/' + title;
+    });
+});
+
 $('#delete').bind('click', function() {
     var title = decodeURIComponent(window.location.hash.replace(/^#/, ''));
     if (currentBag) {
@@ -115,7 +124,8 @@ function guestPage() {
 /*
  * Save the text and tags to the title in currentBag.
  */
-function saveEdit() {
+function saveEdit(callback) {
+    callback = callback || changes;
     var title = $('#editor > h1').text();
     if (title) {
         var text = $('textarea[name=text]').val()
@@ -153,7 +163,7 @@ function saveEdit() {
             type: "PUT",
             contentType: 'application/json',
             data: jsonText,
-            success: changes,
+            success: callback,
             statusCode: {
                 412: function() {
                          displayMessage('Edit Conflict');
