@@ -306,11 +306,14 @@ function emptyEdit() {
     var titler = $('<input>')
         .attr('placeholder', 'Or enter a new title')
         .bind('blur change', editNew);
-    displayMessage('Select a tiddler to edit.', titler);
+    displayMessage('Select a tiddler to edit from the right.', titler);
 }
 
 function editNew() {
-    startEdit($(this).val());
+    var newTitle = $(this).val();
+    if (newTitle) {
+        startEdit(newTitle);
+    }
 }
 
 /*
