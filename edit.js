@@ -62,8 +62,13 @@ $('#delete').bind('click', function() {
 /*
  * Fade in an announcement text message.
  */
-function displayMessage(message) {
-    $('#message').text(message).fadeIn();
+function displayMessage(message, extra) {
+    var content = $('<p>').text(message);
+    $('#message').append(content)
+    if (extra) {
+        $('#message').append(extra);
+    }
+    $('#message').fadeIn();
 }
 
 /*
@@ -298,7 +303,14 @@ function startEdit(tiddlerTitle, freshTags, freshType) {
 
 function emptyEdit() {
     $('button, input, .inputs').attr('disabled', 'disabled');
-    displayMessage('Select a tiddler to edit');
+    var titler = $('<input>')
+        .attr('placeholder', 'Or enter a new title')
+        .bind('blur change', editNew);
+    displayMessage('Select a tiddler to edit.', titler);
+}
+
+function editNew() {
+    startEdit($(this).val());
 }
 
 /*
