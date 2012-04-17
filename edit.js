@@ -26,6 +26,8 @@ $(window).bind('beforeunload', function(e) {
 
 });
 
+$(window).bind('hashchange', checkHash);
+
 $('#revert').bind('click', function() {
     startEdit($('#editor > h1').text());
 });
