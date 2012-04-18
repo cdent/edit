@@ -46,7 +46,9 @@ $('#saver').bind('click', function() {
 });
 
 $('#delete').bind('click', function() {
+    $(window).unbind('hashchange');
     var title = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+    $(window).bind('hashchange', checkHash);
     if (currentBag) {
         var confirmation = confirm('Are you sure you want to delete ' + title + '?');
         if (confirmation) {
@@ -66,6 +68,7 @@ $('#delete').bind('click', function() {
  */
 function displayMessage(message, extra) {
     var content = $('<p>').text(message);
+    $('#message').empty();
     $('#message').append(content)
     if (extra) {
         $('#message').append(extra);
@@ -101,7 +104,9 @@ function setIcon(privatep) {
  */
 function deleteTiddler(title) {
     if (title && currentBag) {
+        $(window).unbind('hashchange');
         window.location.hash = '';
+        $(window).bind('hashchange', checkHash);
         var uri = host + 'bags/'
             + encodeURIComponent(currentBag)
             + '/tiddlers/'
@@ -283,7 +288,10 @@ function establishEdit(tiddler, status, xhr) {
 function startEdit(tiddlerTitle, freshTags, freshType) {
     $('#message').fadeOut('slow');
     $('button, input, .inputs').removeAttr('disabled');
+
+    $(window).unbind('hashchange');
     window.location.hash = tiddlerTitle;
+    $(window).bind('hashchange', checkHash);
     $('#editor > h1').text(tiddlerTitle);
     $.ajax({
         dataType: 'json',
@@ -295,6 +303,7 @@ function startEdit(tiddlerTitle, freshTags, freshType) {
                 $('[name=type]')
                     .filter('[value="default"]')
                     .prop('checked', true);
+                $('textarea[name=text]').val('');
                 setIcon(false);
                 updateContentType(freshType);
                 updateTagView(readTagView(freshTags), null);
