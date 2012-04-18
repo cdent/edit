@@ -46,9 +46,7 @@ $('#saver').bind('click', function() {
 });
 
 $('#delete').bind('click', function() {
-    $(window).unbind('hashchange');
-    var title = decodeURIComponent(window.location.hash.replace(/^#/, ''));
-    $(window).bind('hashchange', checkHash);
+    var title = encodeURIComponent($('#editor > h1').text());
     if (currentBag) {
         var confirmation = confirm('Are you sure you want to delete ' + title + '?');
         if (confirmation) {
@@ -289,9 +287,6 @@ function startEdit(tiddlerTitle, freshTags, freshType) {
     $('#message').fadeOut('slow');
     $('button, input, .inputs').removeAttr('disabled');
 
-    $(window).unbind('hashchange');
-    window.location.hash = tiddlerTitle;
-    $(window).bind('hashchange', checkHash);
     $('#editor > h1').text(tiddlerTitle);
     $.ajax({
         dataType: 'json',
@@ -331,8 +326,9 @@ function editNew() {
  * Check the href anchor to see if we've been told what to edit.
  */
 function checkHash() {
-    var hash = window.location.href.split('#')[1] || '';
+    var hash = window.location.hash;
     if (hash) {
+        hash = hash.replace(/^#/, '');
         var title, tagString, type, args;
         args = hash.split('/', 3);
         $.each(args, function(index, arg) {
