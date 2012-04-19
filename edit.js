@@ -330,7 +330,11 @@ function checkHash() {
     if (hash) {
         hash = hash.replace(/^#/, '');
         var title, tagString, type, args;
-        args = hash.split('/', 3);
+        args = hash.split('/');
+        if (args.length == 4) {
+            args[2] = args.slice(2).join('/');
+            args.pop();
+        }
         $.each(args, function(index, arg) {
             args[index] = decodeURIComponent(arg);
         });
