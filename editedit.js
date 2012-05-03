@@ -6,6 +6,11 @@ $(document).ready(function() {
     var place = $("#container").length > 0 ? $("#container")[0] : document.body;
     var space = window.location.host.split(".")[0]
     var title = $("#title").text();
+    var bagInfo = $('.bag').first().text().split(/_/);
+
+    // don't show edit link if tiddler is not in this space
+    if (bagInfo[0] !== space) return;
+    
     // add edit link if user is member
     $.ajax({ url: "/spaces/" + space + "/members",
         success: function(r) {
