@@ -263,6 +263,7 @@ function updateContentType(tiddlerType) {
  */
 function establishEdit(tiddler, status, xhr) {
     currentBag = tiddler.bag;
+
     $('textarea[name=text]').val(tiddler.text);
     var tagList = [];
     currentFields = tiddler.fields;
@@ -273,8 +274,16 @@ function establishEdit(tiddler, status, xhr) {
 
     currentFields['server.etag'] = xhr.getResponseHeader('etag');
     updateTagView(tiddler.tags, null);
+
+    if (currentBag.split(/_/)[0] !== space) {
+        $('button, input, .inputs').attr('disabled', 'disabled');
+        displayMessage('Edit permission denied. Choose another tiddler.');
+        return;
+    }
+
     startHash = adler32($('input[name=tags]').val()
             + $('textarea[name=text]').val());
+
     if (currentBag.match(/_(private|public)$/)) {
         setIcon(currentBag.match(/_private$/));
     }
@@ -359,7 +368,11 @@ function displayChanges(tiddlers) {
             })
             var penSpan = $('<span>').text('\u270E')
                 .bind('click', function() {
-                    startEdit($(this).parent().attr('data-tiddler-title'));
+                    var title = $(this).parent().attr('data-tiddler-title');
+                    $(window).unbind('hashchange');
+                    window.location.hash = title;
+                    $(window).bind('hashchange', checkHash);
+                    startEdit(title);
                 });
             var tiddlerLink = $('<a>').attr({
                     href: '/' + encodeURIComponent(tiddler.title),
