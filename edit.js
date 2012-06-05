@@ -13,7 +13,8 @@ var recentTags = new Set()
     , host
     , space
     , publicIcon = 'bags/tiddlyspace/tiddlers/publicIcon'
-    , privateIcon = 'bags/tiddlyspace/tiddlers/privateIcon';
+    , privateIcon = 'bags/tiddlyspace/tiddlers/privateIcon'
+    , extracludeRE = /^.extraclude (.+?)$([\s\S]*?)^.extraclude$/mg;
 
 $(window).bind('beforeunload', function(e) {
     currentHash = adler32($('input[name=tags]').val()
@@ -139,50 +140,115 @@ function saveEdit(callback) {
     var title = $('#editor > h1').text();
     if (title) {
         var text = $('textarea[name=text]').val()
-            , tags = readTagView()
-            , tiddler = {};
-        tiddler.text = text;
-        tiddler.tags = tags;
-        tiddler.type = currentFields.type;
-        delete currentFields.type;
-        tiddler.fields = currentFields;
-
-        // update content based on radio buttons
-        var matchedType = $('[name=type]:checked').val();
-        if (matchedType !== 'other') {
-            if (matchedType === 'default') {
-                delete tiddler.type;
-            } else {
-                tiddler.type = matchedType;
-            }
-        }
-
-        var jsonText = JSON.stringify(tiddler);
-        if (!currentBag) {
-            currentBag = space + '_public';
-        }
-        $.ajax({
-            beforeSend: function(xhr) {
-                if (tiddler.fields['server.etag']) {
-                    xhr.setRequestHeader('If-Match',
-                        tiddler.fields['server.etag']);
-                }
-            },
-            url: host + 'bags/' + encodeURIComponent(currentBag)
-                + '/tiddlers/' + encodeURIComponent(title),
-            type: "PUT",
-            contentType: 'application/json',
-            data: jsonText,
-            success: callback,
-            statusCode: {
-                412: function() {
-                         displayMessage('Edit Conflict');
-                }
-            }
-        });
+        _processText(title, text, callback);
     } else {
         displayMessage('There is nothing to save');
     }
+}
+
+/*
+ * Search for '.extraclude' in page and do an
+ * extraclusion if found. Multiples possible.
+ */
+function _processText(title, text, callback) {
+    var newTiddlers = {}
+        , match;
+    while (match = extracludeRE.exec(text)) {
+        var subtitle = match[1]
+            , subtext = match[2]
+            , tiddler = {
+                text: subtext,
+                type: currentFields.type
+            };
+        newTiddlers[subtitle] = tiddler;
+    }
+    var countTiddlers = Object.keys(newTiddlers).length;
+    console.log('processing text', text, newTiddlers, countTiddlers);
+    var countSuccess = 0;
+    var postExtra = function(data, status, xhr) {
+        countSuccess++;
+        if (countSuccess >= countTiddlers) {
+            text = text.replace(extracludeRE, '<<tiddler \[\[$1\]\]>>');
+            _saveEdit(title, text, callback)
+        }
+    };
+    var postExtraFail = function(xhr, status, errorThrown) {
+        displayMessage('Extraclude failed' + status);
+    }
+
+    if (countTiddlers) {
+        var subtitle;
+        for (subtitle in newTiddlers) {
+            _putTiddler(subtitle, newTiddlers[subtitle], postExtra,
+                    postExtraFail)
+        }
+    } else {
+        _saveEdit(title, text, callback)
+    }
+}
+
+/*
+ * PUT a tiddler that was extracluded.
+ */
+function _putTiddler(title, tiddlerData, successCall, errorCall) {
+    var jsonText = JSON.stringify(tiddlerData);
+    if (!currentBag) {
+        currentBag = space + '_public';
+    }
+    $.ajax({
+        url: host + 'bags/' + encodeURIComponent(currentBag)
+            + '/tiddlers/' + encodeURIComponent(title),
+        type: 'PUT',
+        data: jsonText,
+        contentType: 'application/json',
+        success: successCall,
+        error: errorCall
+    });
+}
+
+
+function _saveEdit(title, text, callback) {
+    var tags = readTagView()
+        , tiddler = {};
+    tiddler.text = text;
+    tiddler.tags = tags;
+    tiddler.type = currentFields.type;
+    delete currentFields.type;
+    tiddler.fields = currentFields;
+
+    // update content based on radio buttons
+    var matchedType = $('[name=type]:checked').val();
+    if (matchedType !== 'other') {
+        if (matchedType === 'default') {
+            delete tiddler.type;
+        } else {
+            tiddler.type = matchedType;
+        }
+    }
+
+    var jsonText = JSON.stringify(tiddler);
+    if (!currentBag) {
+        currentBag = space + '_public';
+    }
+    $.ajax({
+        beforeSend: function(xhr) {
+            if (tiddler.fields['server.etag']) {
+                xhr.setRequestHeader('If-Match',
+                    tiddler.fields['server.etag']);
+            }
+        },
+        url: host + 'bags/' + encodeURIComponent(currentBag)
+            + '/tiddlers/' + encodeURIComponent(title),
+        type: "PUT",
+        contentType: 'application/json',
+        data: jsonText,
+        success: callback,
+        statusCode: {
+            412: function() {
+                     displayMessage('Edit Conflict');
+            }
+        }
+    });
 }
 
 /*
