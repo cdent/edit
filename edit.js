@@ -163,7 +163,6 @@ function _processText(title, text, callback) {
         newTiddlers[subtitle] = tiddler;
     }
     var countTiddlers = Object.keys(newTiddlers).length;
-    console.log('processing text', text, newTiddlers, countTiddlers);
     var countSuccess = 0;
     var postExtra = function(data, status, xhr) {
         countSuccess++;
