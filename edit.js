@@ -155,7 +155,7 @@ function _processText(title, text, callback) {
         , match;
     while (match = extracludeRE.exec(text)) {
         var subtitle = match[1]
-            , subtext = match[2]
+            , subtext = match[2].replace(/^\s*/, '').replace(/\s*$/, '')
             , tiddler = {
                 text: subtext,
                 type: currentFields.type
