@@ -10,8 +10,9 @@ var recentTags = new Set()
     , currentFields = {}
     , currentBag
     , startHash = adler32('')
-    , host
-    , space
+    , space = tiddlyweb.status.space.name
+    , host = tiddlyweb.status.server_host.scheme + '://' + space + '.' +
+        tiddlyweb.status.server_host.host + '/'
     , publicIcon = 'bags/tiddlyspace/tiddlers/publicIcon'
     , privateIcon = 'bags/tiddlyspace/tiddlers/privateIcon'
     , extracludeRE = /^.extraclude (.+?)$([\s\S]*?)^.extraclude$/mg;
@@ -478,35 +479,13 @@ function init() {
                     }
     });
 
-    var url = '/status'
-        , genHost = false;
-    if (window.location.href.match(/^file:/)) {
-        // for dev
-        url = 'http://cdent.tiddlyspace.com/status';
-        genHost = true;
-    }
+    var recipe = tiddlyweb.status.space.recipe;
 
-    $.ajax({
-        dataType: 'json',
-        url: url,
-        success: function(data) {
-            space = data.space.name;
-            host = '/';
-            if (genHost) {
-                host = data.server_host.scheme + '://'
-                    + space + '.' + data.server_host.host + '/';
-            }
-            if (data.username === 'GUEST') {
-                guestPage();
-            } else {
-                $.ajax({
-                    url: host + 'spaces/' + space + '/members',
-                    success: changes,
-                    error: guestPage,
-                });
-            }
-        }
-    });
+    if (recipe.match(/_private$/)) {
+        changes();
+    }else {
+        guestPage();
+    }
 }
 
 init();
