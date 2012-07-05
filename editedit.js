@@ -10,15 +10,25 @@ $(document).ready(function() {
 
     // don't show edit link if tiddler is not in this space
     if (bagInfo[0] !== space) return;
+
+    function addLink() {
+        $("<a id='editLink' />").attr('href'
+            , '/edit#' + encodeURIComponent(title))
+            .text("edit tiddler").prependTo(place);
+    }
     
     // add edit link if user is member
-    $.ajax({ url: "/spaces/" + space + "/members",
-        success: function(r) {
-            if(r) {
-                $("<a id='editLink' />").attr('href'
-                    , '/edit#' + encodeURIComponent(title))
-                    .text("edit tiddler").prependTo(place);
-            }
+    if (tiddlyweb && tiddlyweb.status) {
+        if (tiddlyweb.status.space.recipe.match(/_private$/)) {
+            addLink();
         }
-    });
+    } else {
+        $.ajax({ url: "/spaces/" + space + "/members",
+            success: function(r) {
+                if(r) {
+                    addLink();
+                }
+            }
+        });
+    }
 });
