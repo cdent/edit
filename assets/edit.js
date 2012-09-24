@@ -340,7 +340,7 @@ function establishEdit(tiddler, status, xhr) {
     currentFields['server.etag'] = xhr.getResponseHeader('etag');
     updateTagView(tiddler.tags, null);
 
-    if (currentBag.split(/_/)[0] !== space) {
+    if (tiddler.permissions.indexOf('write') === -1) {
         $('button, input, .inputs').attr('disabled', 'disabled');
         displayMessage('Edit permission denied. Choose another tiddler.');
         return;
