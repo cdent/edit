@@ -15,7 +15,7 @@ var recentTags = new Set()
         tiddlyweb.status.server_host.host + '/'
     , publicIcon = 'bags/tiddlyspace/tiddlers/publicIcon'
     , privateIcon = 'bags/tiddlyspace/tiddlers/privateIcon'
-    , extracludeRE = /^.extraclude (.+?)$([\s\S]*?)^.extraclude$/mg;
+    , extracludeRE = /^.extraclude (.+?)\s*$([\s\S]*?)^.extraclude$/mg;
 
 $(window).bind('beforeunload', function(e) {
     currentHash = adler32($('input[name=tags]').val()
