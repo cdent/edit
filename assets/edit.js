@@ -11,8 +11,7 @@ var recentTags = new Set()
     , currentBag
     , startHash = adler32('')
     , space = tiddlyweb.status.space.name
-    , host = tiddlyweb.status.server_host.scheme + '://' + space + '.' +
-        tiddlyweb.status.server_host.host + '/'
+    , host = '/'
     , publicIcon = 'bags/tiddlyspace/tiddlers/publicIcon'
     , privateIcon = 'bags/tiddlyspace/tiddlers/privateIcon'
     , extracludeRE = /^.extraclude (.+?)\s*$([\s\S]*?)^.extraclude$/mg;
