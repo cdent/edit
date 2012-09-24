@@ -7,10 +7,12 @@ Set.prototype.remove = function(o) { delete this[o]; }
 var adler32 = function(a){for(var b=65521,c=1,d=0,e=0,f;f=a.charCodeAt(e++);d=(d+c)%b)c=(c+f)%b;return(d<<16)|c}; // see https://gist.github.com/1200559/1c2b2093a661c4727958ff232cd12de8b8fb9db9
 
 var recentTags = new Set()
+	, localStorage = window.localStorage
     , currentFields = {}
-    , currentBag
+	, currentTimeout = 0
     , startHash = adler32('')
     , space = tiddlyweb.status.space.name
+	, currentBag = space + '_public'
     , host = '/'
     , publicIcon = 'bags/tiddlyspace/tiddlers/publicIcon'
     , privateIcon = 'bags/tiddlyspace/tiddlers/privateIcon'
@@ -34,12 +36,19 @@ $('#revert').bind('click', function() {
 });
 
 $('#save').bind('click', function() {
-    saveEdit();
+    saveEdit(function() {
+		var title = $('#editor > h1').text()
+			, uri = tiddlerURI(host, currentBag, title);
+		flushStorage(uri);
+		changes();
+	});
 });
 
 $('#saver').bind('click', function() {
     saveEdit(function() {
-        var title = encodeURIComponent($('#editor > h1').text());
+        var title = encodeURIComponent($('#editor > h1').text())
+			, uri = tiddlerURI(host, currentBag, title);
+		flushStorage(uri);
         startHash = adler32($('input[name=tags]').val()
                 + $('textarea[name=text]').val());
         window.location.href = '/' + title;
@@ -61,6 +70,53 @@ $('#delete').bind('click', function() {
         displayMessage('Tiddler never saved to server.');
     }
 });
+
+/* 
+ * Establish a timeout for auto-saving.
+ */
+function establishInterval() {
+	if (localStorage) {
+		var timeoutId = setInterval(function () {
+			var title = $('#editor > h1').text()
+				, text = $('textarea[name=text]').val()
+				, tags = readTagView()
+				, tiddler = {
+					title: title,
+					text: text,
+					tags: tags,
+					fields: currentFields,
+					bag: currentBag,
+					contentType: $('[name=type]:checked').val()
+				}
+				, uri = tiddlerURI(host, currentBag, title);
+			localStorage.setItem(uri, JSON.stringify(tiddler));
+		}, 10000);
+		return timeoutId;
+	} else {
+		return 0;
+	}
+}
+
+/*
+ * Flush the current data out of localStorage.
+ */
+function flushStorage(uri) {
+	if (localStorage) {
+		if (currentTimeout) {
+			window.clearInterval(currentTimeout)
+		}
+		localStorage.removeItem(uri);
+	}
+}
+
+/*
+ * Add the current data to localStorage for safekeeping.
+ */
+function addStorage(uri, data) {
+	if (localStorage) {
+		localStorage.setItem(uri);
+	}
+}
 
 /*
  * Fade in an announcement text message.
@@ -99,6 +155,17 @@ function setIcon(privatep) {
 }
 
 /*
+ * Given host, bag and title make a good URI
+ * for a tiddler.
+ */
+function tiddlerURI(host, bag, title) {
+	return host + 'bags/'
+		+ encodeURIComponent(currentBag)
+		+ '/tiddlers/'
+		+ encodeURIComponent(title);
+}
+
+/*
  * Send a DELETE for the tiddler named by title.
  */
 function deleteTiddler(title) {
@@ -106,10 +173,7 @@ function deleteTiddler(title) {
         $(window).unbind('hashchange');
         window.location.hash = '';
         $(window).bind('hashchange', checkHash);
-        var uri = host + 'bags/'
-            + encodeURIComponent(currentBag)
-            + '/tiddlers/'
-            + encodeURIComponent(title);
+        var uri = tiddlerURI(host, currentBag, title);
         $.ajax({
             url: uri,
             type: 'DELETE',
@@ -191,12 +255,8 @@ function _processText(title, text, callback) {
  */
 function _putTiddler(title, tiddlerData, successCall, errorCall) {
     var jsonText = JSON.stringify(tiddlerData);
-    if (!currentBag) {
-        currentBag = space + '_public';
-    }
     $.ajax({
-        url: host + 'bags/' + encodeURIComponent(currentBag)
-            + '/tiddlers/' + encodeURIComponent(title),
+        url: tiddlerURI(host, currentBag, title),
         type: 'PUT',
         data: jsonText,
         contentType: 'application/json',
@@ -226,9 +286,6 @@ function _saveEdit(title, text, callback) {
     }
 
     var jsonText = JSON.stringify(tiddler);
-    if (!currentBag) {
-        currentBag = space + '_public';
-    }
     $.ajax({
         beforeSend: function(xhr) {
             if (tiddler.fields['server.etag']) {
@@ -236,8 +293,7 @@ function _saveEdit(title, text, callback) {
                     tiddler.fields['server.etag']);
             }
         },
-        url: host + 'bags/' + encodeURIComponent(currentBag)
-            + '/tiddlers/' + encodeURIComponent(title),
+        url: tiddlerURI(host, currentBag, title),
         type: "PUT",
         contentType: 'application/json',
         data: jsonText,
@@ -337,10 +393,12 @@ function establishEdit(tiddler, status, xhr) {
     // update the content type buttons
     updateContentType(tiddler.type);
 
-    currentFields['server.etag'] = xhr.getResponseHeader('etag');
+	if (xhr) {
+		currentFields['server.etag'] = xhr.getResponseHeader('etag');
+	}
     updateTagView(tiddler.tags, null);
 
-    if (tiddler.permissions.indexOf('write') === -1) {
+    if (tiddler.permissions && tiddler.permissions.indexOf('write') === -1) {
         $('button, input, .inputs').attr('disabled', 'disabled');
         displayMessage('Edit permission denied. Choose another tiddler.');
         return;
@@ -349,9 +407,22 @@ function establishEdit(tiddler, status, xhr) {
     startHash = adler32($('input[name=tags]').val()
             + $('textarea[name=text]').val());
 
+	currentTimeout = establishInterval();
     if (currentBag.match(/_(private|public)$/)) {
         setIcon(currentBag.match(/_private$/));
     }
+}
+
+/*
+ * Check to see if there is backup date for the current tiddler
+ */
+function checkBackup(tiddlerTitle) {
+	if (localStorage) {
+		var uri = tiddlerURI(host, currentBag, tiddlerTitle),
+			data = localStorage.getItem(uri);
+		return data;
+	}
+	return null;
 }
 
 /*
@@ -362,6 +433,15 @@ function startEdit(tiddlerTitle, freshTags, freshType) {
     $('button, input, .inputs').removeAttr('disabled');
 
     $('#editor > h1').text(tiddlerTitle);
+	var tiddlerBackup = checkBackup(tiddlerTitle);
+	if (tiddlerBackup) {
+		if (confirm("There's a backup for this tiddler. Use it?")) {
+			var data = JSON.parse(tiddlerBackup);
+			data.type = data.contentType;
+			delete data.contentType;
+			return establishEdit(data);
+		}
+	}
     $.ajax({
         dataType: 'json',
         headers: {'Cache-Control': 'max-age=0'},
@@ -374,6 +454,7 @@ function startEdit(tiddlerTitle, freshTags, freshType) {
                     .prop('checked', true);
                 $('textarea[name=text]').val('');
                 setIcon(false);
+				currentTimeout = establishInterval();
                 updateContentType(freshType);
                 updateTagView(readTagView(freshTags), null);
              }
