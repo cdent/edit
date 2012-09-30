@@ -34,6 +34,9 @@ $(function() {
 	$(window).bind('hashchange', checkHash);
 
 	$('#revert').bind('click', function() {
+		var title = $('#editor > h1').text(),
+			uri = tiddlerURI(host, currentBag, title);
+		flushStorage(uri);
 		startEdit($('#editor > h1').text());
 	});
 
@@ -76,7 +79,8 @@ $(function() {
 	 * Establish a timeout for auto-saving.
 	 */
 	function establishInterval() {
-		var timeoutId = 0;
+		var timeoutId = 0,
+			currentHash;
 		if (localStorage) {
 			timeoutId = setInterval(function () {
 				var title = $('#editor > h1').text(),
@@ -91,7 +95,11 @@ $(function() {
 						contentType: $('[name=type]:checked').val()
 					},
 					uri = tiddlerURI(host, currentBag, title);
-				localStorage.setItem(uri, JSON.stringify(tiddler));
+				currentHash = adler32($('input[name=tags]').val()
+					+ $('textarea[name=text]').val());
+				if (currentHash !== startHash) {
+					localStorage.setItem(uri, JSON.stringify(tiddler));
+				}
 			}, 10000);
 		}
 		return timeoutId;
