@@ -35,6 +35,7 @@ $(function() {
 	$(window).bind('hashchange', checkHash);
 
 	$('#revert').bind('click', function() {
+		$('button, input, .inputs').attr('disabled', 'disabled');
 		var title = $('#editor > h1').text(),
 			uri = tiddlerURI(host, currentBag, title);
 		flushStorage(uri);
@@ -42,6 +43,7 @@ $(function() {
 	});
 
 	$('#save').bind('click', function() {
+		$('button, input, .inputs').attr('disabled', 'disabled');
 		saveEdit(function() {
 			var title = $('#editor > h1').text(),
 				uri = tiddlerURI(host, currentBag, title);
@@ -51,6 +53,7 @@ $(function() {
 	});
 
 	$('#saver').bind('click', function() {
+		$('button, input, .inputs').attr('disabled', 'disabled');
 		saveEdit(function() {
 			var title = encodeURIComponent($('#editor > h1').text()),
 				uri = tiddlerURI(host, currentBag, title);
@@ -63,6 +66,7 @@ $(function() {
 
 	$('#delete').bind('click', function() {
 		var title = encodeURIComponent($('#editor > h1').text());
+		$('button, input, .inputs').attr('disabled', 'disabled');
 		if (currentBag) {
 			if (confirm('Are you sure you want to delete ' + title + '?')) {
 				$('input[name=tags]').val('');
