@@ -8,7 +8,8 @@ $(function() {
 		currentTimeout = 0,
 		startHash,
 		space = tiddlyweb.status.space.name,
-		currentBag = space + '_public',
+		currentBag,
+		defaultBag = space + '_public',
 		host = '/',
 		publicIcon = 'bags/tiddlyspace/tiddlers/publicIcon',
 		privateIcon = 'bags/tiddlyspace/tiddlers/privateIcon',
@@ -91,7 +92,7 @@ $(function() {
 						text: text,
 						tags: tags,
 						fields: currentFields,
-						bag: currentBag,
+						bag: currentBag || defaultBag,
 						contentType: $('[name=type]:checked').val()
 					},
 					uri = tiddlerURI(host, currentBag, title);
@@ -160,7 +161,7 @@ $(function() {
 	 */
 	function tiddlerURI(host, bag, title) {
 		return host + 'bags/'
-			+ encodeURIComponent(bag)
+			+ encodeURIComponent(bag ? bag : defaultBag)
 			+ '/tiddlers/'
 			+ encodeURIComponent(title);
 	}
@@ -469,9 +470,9 @@ $(function() {
 
 	function emptyEdit() {
 		$('button, input, .inputs').attr('disabled', 'disabled');
-		var titler = $('<input>')
+		var titler = $('<input id="editnew">')
 			.attr('placeholder', 'Or enter a new title')
-			.bind('blur change', editNew);
+			.bind('change', editNew);
 		displayMessage('Select a tiddler to edit from the right.', titler);
 	}
 
