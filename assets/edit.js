@@ -311,6 +311,8 @@ $(function() {
 			statusCode: {
 				412: function() {
 					displayMessage('Edit Conflict');
+					// re-enable text and tags to allow copy
+					$('.inputs').removeAttr('disabled');
 				}
 			}
 		});
@@ -424,7 +426,7 @@ $(function() {
 	}
 
 	/*
-	 * Check to see if there is backup date for the current tiddler
+	 * Check to see if there is backup data for the current tiddler
 	 */
 	function checkBackup(tiddlerTitle) {
 		if (localStorage) {
