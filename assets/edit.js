@@ -22,7 +22,7 @@ $(function() {
 	startHash = adler32('');
 
 	$(window).bind('beforeunload', function(e) {
-		currentHash = adler32($('input[name=tags]').val()
+		var currentHash = adler32($('input[name=tags]').val()
 				+ $('textarea[name=text]').val());
 		e.stopPropagation();
 		if (currentHash !== startHash) {
@@ -311,6 +311,8 @@ $(function() {
 			statusCode: {
 				412: function() {
 					displayMessage('Edit Conflict');
+					// re-enable text and tags to allow copy
+					$('.inputs').removeAttr('disabled');
 				}
 			}
 		});
@@ -424,7 +426,7 @@ $(function() {
 	}
 
 	/*
-	 * Check to see if there is backup date for the current tiddler
+	 * Check to see if there is backup data for the current tiddler
 	 */
 	function checkBackup(tiddlerTitle) {
 		if (localStorage) {
@@ -445,6 +447,12 @@ $(function() {
 		$('#editor > h1').text(tiddlerTitle);
 		var tiddlerBackup = checkBackup(tiddlerTitle);
 		if (tiddlerBackup) {
+			/*
+			 * We flushStorage whether they confirm or cancel:
+			 * we already have the data.
+			 */
+			var uri = tiddlerURI(host, currentBag, tiddlerTitle);
+			flushStorage(uri);
 			if (confirm("There's a backup for this tiddler. Use it?")) {
 				var data = JSON.parse(tiddlerBackup);
 				data.type = data.contentType;
