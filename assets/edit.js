@@ -22,7 +22,7 @@ $(function() {
 	startHash = adler32('');
 
 	$(window).bind('beforeunload', function(e) {
-		currentHash = adler32($('input[name=tags]').val()
+		var currentHash = adler32($('input[name=tags]').val()
 				+ $('textarea[name=text]').val());
 		e.stopPropagation();
 		if (currentHash !== startHash) {
