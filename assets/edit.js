@@ -475,6 +475,7 @@ $(function() {
 					currentTimeout = establishInterval();
 					updateContentType(freshType);
 					updateTagView(readTagView(freshTags), null);
+					currentFields = {};
 				}
 			}
 		});
