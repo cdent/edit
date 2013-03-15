@@ -392,11 +392,30 @@ $(function() {
 	}
 
 	/*
+	 * Ask if we'd like to clone.
+	 */
+	function cloneTiddler(tiddler) {
+		var button = $('<button>').attr('id', 'clone')
+			.text('Clone'),
+			li = $('<li>').attr('id', 'clone').append(button);
+		button.on('click', function() {
+			tiddler.bag = space + '_public';
+			delete tiddler.fields['server.etag'];
+			$('#message').fadeOut('slow');
+			establishEdit(tiddler);
+			$('button, input, .inputs').removeAttr('disabled');
+		});
+		$('#actions').append(li);
+	}
+
+
+	/*
 	 * Callback after tiddler is GET from server, filling in forms,
 	 * preparing for edit.
 	 */
 	function establishEdit(tiddler, status, xhr) {
 		currentBag = tiddler.bag;
+		$('#clone').remove();
 
 		$('textarea[name=text]').val(tiddler.text);
 		currentFields = tiddler.fields;
@@ -412,8 +431,13 @@ $(function() {
 
 		if (tiddler.permissions && tiddler.permissions.indexOf('write') === -1) {
 			$('button, input, .inputs').attr('disabled', 'disabled');
-			displayMessage('Edit permission denied. Choose another tiddler.');
-			return;
+			displayMessage('Edit permission denied. '
+					+ 'Choose another tiddler or clone.');
+			return cloneTiddler(tiddler);
+		} else if (!currentBag.match(space + '_(?:private|public)')) {
+			$('button, input, .inputs').attr('disabled', 'disabled');
+			displayMessage('Tiddler must be cloned to edit.');
+			return cloneTiddler(tiddler);
 		}
 
 		startHash = adler32($('input[name=tags]').val()
