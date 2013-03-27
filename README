@@ -1,5 +1,21 @@
 
-A simple textarea based editor for TiddlySpace with support
-for tags, loading via #hash and clicking on recent tiddlers.
+A simple textarea based editor for
+[TiddlySpace](http://tiddlyspace.com) with a small but useful number
+of features:
 
-Installed at http://edit.tiddlyspace.com/
+* Support for editing multiple content types
+    * Markdown
+    * HTML
+    * TiddlyWiki text
+    * CSS
+    * JavaScript
+    * Plain Text
+* Tag editing with recently used tags displayed
+* Loading of a tiddler via URI #fragment
+* [Extraclusion](http://edit.tiddlyspace.com/extraclusion)
+* Automatic backups to LocalStorage (flakey)
+
+[medit](http://medit.tiddlyspace.com/) is a newer editor for
+TiddlySpace with a slightly different feature set.
+
+More info at http://edit.tiddlyspace.com/
