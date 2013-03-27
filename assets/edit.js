@@ -319,6 +319,11 @@ $(function() {
 					displayMessage('Edit Conflict');
 					// re-enable text and tags to allow copy
 					$('.inputs').removeAttr('disabled');
+				},
+				409: function() {
+					displayMessage('Malformed Tiddler (long title?)');
+					// re-enable text and tags to allow copy
+					$('.inputs').removeAttr('disabled');
 				}
 			}
 		});
