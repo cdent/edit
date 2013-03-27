@@ -10,10 +10,17 @@ $(function() {
 		space = tiddlyweb.status.space.name,
 		currentBag,
 		defaultBag = space + '_public',
+		defaultType = 'text/x-tiddlywiki',
 		host = '/',
 		publicIcon = 'bags/tiddlyspace/tiddlers/publicIcon',
 		privateIcon = 'bags/tiddlyspace/tiddlers/privateIcon',
-		extracludeRE = /^.extraclude (.+?)\s*$([\s\S]*?)^.extraclude$/mg;
+		extracludeRE = /^.extraclude (.+?)\s*$([\s\S]*?)^.extraclude$/mg,
+		extracludeReplace = {
+			'text/x-markdown': '{{$1}}'
+		};
+
+	// because we can't use a variable just above...
+	extracludeReplace[defaultType] = '<<tiddler [[$1]]>>';
 
 	Set = function() {};
 	Set.prototype.add = function(o) { this[o] = true; };
@@ -238,9 +245,11 @@ $(function() {
 		var countTiddlers = Object.keys(newTiddlers).length,
 			countSuccess = 0,
 			postExtra = function() {
+				var replaceType = extracludeReplace[currentFields.type ?
+					currentFields.type : defaultType];
 				countSuccess += 1;
 				if (countSuccess >= countTiddlers) {
-					text = text.replace(extracludeRE, '<<tiddler [[$1]]>>');
+					text = text.replace(extracludeRE, replaceType);
 					_saveEdit(title, text, callback);
 				}
 			},
@@ -288,11 +297,8 @@ $(function() {
 		// update content based on radio buttons
 		var matchedType = $('[name=type]:checked').val();
 		if (matchedType !== 'other') {
-			if (matchedType === 'default') {
-				delete tiddler.type;
-			} else {
-				tiddler.type = matchedType;
-			}
+			tiddler.type = matchedType;
+			currentFields.type = tiddler.type;
 		}
 
 		var jsonText = JSON.stringify(tiddler);
@@ -385,9 +391,13 @@ $(function() {
 		if (matchedType.length) {
 			matchedType.prop('checked', true);
 		} else if (tiddlerType) {
-			$('[name=type]').filter('[value=other]').prop('checked', true);
+			$('[name=type]')
+				.filter('[value=other]')
+				.prop('checked', true);
 		} else {
-			$('[name=type]').filter('[value="default"]').prop('checked', true);
+			$('[name=type]')
+				.filter('[value="' + defaultType + '"]')
+				.prop('checked', true);
 		}
 	}
 
@@ -492,7 +502,7 @@ $(function() {
 			statusCode: {
 				404: function() {
 					$('[name=type]')
-						.filter('[value="default"]')
+						.filter('[value="' + defaultType + '"]')
 						.prop('checked', true);
 					$('textarea[name=text]').val('');
 					setIcon(false);
