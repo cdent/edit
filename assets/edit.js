@@ -298,7 +298,6 @@ $(function() {
 		var matchedType = $('[name=type]:checked').val();
 		if (matchedType !== 'other') {
 			tiddler.type = matchedType;
-			currentFields.type = tiddler.type;
 		}
 
 		var jsonText = JSON.stringify(tiddler);
