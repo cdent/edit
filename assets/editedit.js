@@ -18,7 +18,7 @@ $(document).ready(function() {
     }
     
     // add edit link if user is member
-    if (tiddlyweb && tiddlyweb.status) {
+    if (window.tiddlyweb && tiddlyweb.status) {
         if (tiddlyweb.status.space.recipe.match(/_private$/)) {
             addLink();
         }
