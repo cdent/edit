@@ -8,8 +8,8 @@ $(function() {
 		currentTimeout = 0,
 		startHash,
 		space = tiddlyweb.status.space.name,
-		currentBag,
 		defaultBag = space + '_public',
+		currentBag = defaultBag,
 		defaultType = 'text/x-tiddlywiki',
 		host = '/',
 		publicIcon = 'bags/tiddlyspace/tiddlers/publicIcon',
@@ -103,7 +103,7 @@ $(function() {
 						text: text,
 						tags: tags,
 						fields: currentFields,
-						bag: currentBag || defaultBag,
+						bag: currentBag,
 						contentType: $('[name=type]:checked').val()
 					},
 					uri = tiddlerURI(host, currentBag, title);
