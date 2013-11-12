@@ -8,6 +8,7 @@ $(function() {
 		currentTimeout = 0,
 		startHash,
 		space = tiddlyweb.status.space.name,
+		freshTiddler = false,
 		defaultBag = space + '_public',
 		currentBag = defaultBag,
 		defaultType = 'text/x-tiddlywiki',
@@ -152,7 +153,7 @@ $(function() {
 			'class': 'privacyicon'
 		});
 
-		if (!currentBag) {
+		if (freshTiddler) {
 			img.css('cursor', 'pointer')
 				.click(function() {
 					var target = privatep ? 'public' : 'private';
@@ -509,6 +510,7 @@ $(function() {
 						.filter('[value="' + defaultType + '"]')
 						.prop('checked', true);
 					$('textarea[name=text]').val('');
+					freshTiddler = true;
 					setIcon(false);
 					currentTimeout = establishInterval();
 					updateContentType(freshType);
